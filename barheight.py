@@ -5,6 +5,8 @@ vfft = np.vectorize(np.fft.rfft, signature='(m,n)->(m,k)')
 
 # for a given frame, returns the heights of each bar
 def bar_height(frame, blocks, points_per_bar):
+    """ breaks up the result of an FFT into 'blocks' amount of sections, isolates the max in the section
+        and that maximum is used as the height of a bar in the video """
     heights = [] 
     for i in range(blocks):
         curr_h = 0
@@ -48,8 +50,8 @@ class VideoController:
         print(f"converted. resizing {self.audio.shape[0]}")
         self.audio.resize(self.samples_per_frame, self.audio.shape[0]//self.samples_per_frame-1)
         
-        # transformed applies a real-values fast fourier transform on each frame
-        # a frame is a sectiond of samples in the wav file, as framerate goes up
+        # transformed applies a real-valued fast fourier transform on each frame
+        # a frame is a section of samples in the wav file, as framerate goes up
         # the accuracy decreases, while the framerate of the video increases
         # 60 fps is probably a good compromise
         print(f"resized. transforming {self.audio.shape}->{self.audio.shape[0]*self.audio.shape[1]}")
