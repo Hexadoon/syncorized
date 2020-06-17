@@ -1,6 +1,5 @@
 # audio-visualizer
-## Developers
-* Sammy
-* Sujay
-## Project Manager
-* Lylianna
+## Team Members
+| Sujay    | Sammy     | Lylianna       |
+|:--------:| :-------: | :------------: |
+| Developer| Developer | Project Manager|
