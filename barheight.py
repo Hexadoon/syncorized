@@ -19,7 +19,7 @@ def bar_height(frame, blocks, points_per_bar):
     return np.array(heights)
 
 
-class VideoController:
+class VideoProcessor:
     def __init__(self, vheight, vwidth, framerate, blocks, audiofile):
         """ vheight/width are the dimensions of the video
             framerate is the framerate
@@ -48,7 +48,7 @@ class VideoController:
         # now 'audio' represents an array of audio frames, where each array
         # corresponds to a frame in the video
         print(f"converted. resizing {self.audio.shape[0]}")
-        self.audio.resize(self.samples_per_frame, self.audio.shape[0]//self.samples_per_frame-1)
+        self.audio.resize(self.audio.shape[0]//self.samples_per_frame-1, self.samples_per_frame)
         
         # transformed applies a real-valued fast fourier transform on each frame
         # a frame is a section of samples in the wav file, as framerate goes up
@@ -61,14 +61,19 @@ class VideoController:
         # to get the actual magnitude of that frequency (which will be the height of the bar)
         print(f"transformed, taking magnitudes {transformed.shape}")
         transformed = magnitude(transformed)
-        print("magnitudes taken, calculating bar heights")    
+        print(f"magnitudes taken, calculating bar heights {np.amax(transformed)}")    
         
-        points_per_bar = (transformed.shape[1]//self.blocks) // 16
-        #                 ^samples per frame    ^ per bar  ^ we only *really* want the info 
-        #                                                    stored in the lower part
+        points_per_bar = (transformed.shape[1]//self.blocks) 
+        #                 ^samples per frame    ^ per bar
+        
+        for i in range(4):
+            if points_per_bar >> 2 > 0:
+                points_per_bar >>= 1
+        # this loop cuts off high ends while trying to keep as much information as is necessary
 
-        get_heights = np.vectorize(bar_height, \
-                signature='(m),(),()->(k)')
+
+        get_heights = np.vectorize(bar_height, signature='(m),(),()->(k)')
+        
         video_bar_heights = get_heights(transformed, self.blocks, points_per_bar)
         
         print(f"bar heights calculated {video_bar_heights.shape}")
