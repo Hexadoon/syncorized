@@ -9,7 +9,6 @@ help_message = "Usage: python3 brain.py <audio file> [ -r|f|b|BC|BG|E|BO|BOC ]\n
                "\t-b (bar count)\t\t\tnext arg must be a positive int (default: 100)\n" + \
                "\t-BC (RGB bar color)\t\tnext three args must be ints from 0-255 (inc, inc) (default: (0, 0, 255))\n" + \
                "\t-BG (RBG background color)\tnext three args must be ints from 0-255 (inc, inc) (default: (0, 0, 0))\n" + \
-               "\t-E (empty space)\t\tnext arg must be a float from 0-1 (default: .15)\n" + \
                "\t-BO (border width)\t\tnext arg must be a float from 0-1 (default: .1)\n" + \
                "\t-BOC (border color)\t\tnext three args must be ints from 0-255 (inc, inc) (default: (255, 255, 255))"
 
