@@ -6,12 +6,12 @@ from tqdm import tqdm
 
 class VideoCreator:
     
-    def __init__(self, width, height, fps, bars, song):
+    def __init__(self, width, height, fps, bars, name):
         self.video_width = width 
         self.video_height = height
         self.framerate = fps
         self.blocks = bars
-        self.wavfile = song
+        self.title = './_' + name + '.mp4'
     
     
     def process_frame(self, frame_data, border_width, border_BGR, empty_space, \
@@ -54,7 +54,7 @@ class VideoCreator:
         
         # set up the video generator
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-        video = cv2.VideoWriter('./test.mp4', fourcc, self.framerate, (self.video_width, self.video_height))
+        video = cv2.VideoWriter(self.title, fourcc, self.framerate, (self.video_width, self.video_height))
 
         # finally, generate the video from the frames
         bar_width = self.video_width//self.blocks

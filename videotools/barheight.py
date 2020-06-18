@@ -20,7 +20,7 @@ def bar_height(frame, blocks, points_per_bar):
 
 
 class VideoProcessor:
-    def __init__(self, vheight, vwidth, framerate, blocks, audiofile):
+    def __init__(self, vwidth, vheight, framerate, blocks, audiofile):
         """ vheight/width are the dimensions of the video
             framerate is the framerate
             blocks is the amount of bars to be displayed in each frame
@@ -67,7 +67,7 @@ class VideoProcessor:
         #                 ^samples per frame    ^ per bar
         
         for i in range(4):
-            if points_per_bar >> 2 > 0:
+            if points_per_bar >> 1 > 0:
                 points_per_bar >>= 1
         # this loop cuts off high ends while trying to keep as much information as is necessary
 

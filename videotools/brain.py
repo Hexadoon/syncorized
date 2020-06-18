@@ -1,6 +1,7 @@
 from sys import argv,exit,stderr
 import barheight
 import processor
+import subprocess
 from scipy.io import wavfile as wavf
 
 help_message = "Usage: python3 brain.py <audio file> [ -r|f|b|BC|BG|E|BO|BOC ]\n" + \
@@ -22,6 +23,8 @@ empty_space = .15
 border_width = .1
 border_color_RGB = (255, 255, 255)
 wavfile = None
+name = ''
+
 
 i = 1
 while i < len(argv):
@@ -31,6 +34,7 @@ while i < len(argv):
             exit(1)
         else:
             wavfile = argv[i]
+            name = argv[1][:-4]
             i += 1
     if i >= len(argv):
         break
@@ -40,24 +44,38 @@ while i < len(argv):
             video_width = int(argv[i+1])
             video_height = int(argv[i+2])
             i += 3
+            continue
         elif argv[i] == '-f':
-            framerate = int(argv[i])
-            i += 1
+            framerate = int(argv[i+1])
+            print('f')
+            i += 2
+            continue
         elif argv[i] == '-b':
-            bar_count = int(argv[i])
-            i += 1
+            bar_count = int(argv[i+1])
+            print('b', argv[i+2])
+            i += 2
+            continue
         elif argv[i] == '-BC':
             bar_color_RGB = (int(argv[i+1]), int(argv[i+2]), int(argv[i+3]))
+            print('BC')
             i += 4
-        elif argv[i] == 'BG':
+            continue
+        elif argv[i] == '-BG':
             background_color_RGB = (int(argv[i+1]), int(argv[i+2]), int(argv[i+3]))
+            print('BG')
             i += 4
+            continue
         elif argv[i] == '-BO':
             border_width = float(argv[i+1])
+            print('BO')
             i += 2
+            continue
         elif argv[i] == '-BOC':
             border_color_RGB = (int(argv[i+1]), int(argv[i+2]), int(argv[i+3]))
+            print('BOC')
             i += 4
+        else:
+            raise ValueError
     except:
         print(help_message)
         exit(1)
@@ -70,8 +88,13 @@ except:
     
 generator = barheight.VideoProcessor(video_width, video_height, framerate, bar_count, wavfile)
 video_bar_height = generator.decompose()
-print(video_bar_height.shape)
 
-print(border_width, border_color_RGB, empty_space, background_color_RGB, bar_color_RGB)
-renderer = processor.VideoCreator(video_width, video_height, framerate, bar_count, wavfile)
+renderer = processor.VideoCreator(video_width, video_height, framerate, bar_count, name)
 renderer.create_video(video_bar_height, border_width, border_color_RGB, empty_space, background_color_RGB, bar_color_RGB)
+
+subprocess.run(args=['rm', name + '.mp4'])
+subprocess.run(args=' '.join(['ffmpeg -i', '_' + name + '.mp4', \
+                              '-i', argv[1], \
+                              '-c:v copy -c:a aac', \
+                              name + '.mp4']), shell=True)
+subprocess.run(args=['rm', '_' + name + '.mp4'])
