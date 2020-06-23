@@ -43,10 +43,18 @@ i = 1
 while i < len(argv):
     if i == 1:
         # wavfile must be the first argument if -p isn't specified
-        if argv[i][-3:] != 'wav' and ('-p' not in argv):
-            stderr.write('The first argument must be the name of a wav file, support for other audio types is coming soon!\n')
+        if not (argv[i][-3:] == 'wav' or argv[i][-3:] == 'mp3') and ('-p' not in argv):
+            stderr.write('The first argument must be the name of a wav or mp3 file\n')
             exit(1)
-        elif ('-p' not in argv):
+        
+        # make the conversion if an mp3 is given (drops a free wav in your folder too, may want to delete it though)
+        if argv[i][-3:] == 'mp3':
+            if os.path.exists(argv[1][:-3] + 'wav'):
+                os.remove(argv[1][:-3] + 'wav')
+
+            ffmpeg.output(ffmpeg.input(argv[1]).audio, filename=argv[1][:-3]+'wav', f='wav').run()
+            argv[1] = argv[1][:-3]+'wav'
+        if ('-p' not in argv):
             wavfile = argv[i]
 
             # if there is no /, then it must be in this directory
