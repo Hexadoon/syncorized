@@ -35,7 +35,8 @@ border_color_RGB = (255, 255, 255)
 wavfile = None
 preview_mode = False
 
-name = ''
+# path represents the whole filepath, including the name of the file
+path = ''
 
 # this loop just reads the command line arguments 
 i = 1
@@ -47,7 +48,12 @@ while i < len(argv):
             exit(1)
         elif ('-p' not in argv):
             wavfile = argv[i]
-            name = argv[1][:-4]
+
+            # if there is no /, then it must be in this directory
+            path = argv[1][:-4] 
+            if '/' not in path: 
+                path = os.getcwd() + '/' + path
+
             i += 1
     if i >= len(argv):
         break
@@ -123,17 +129,17 @@ else:
     video_bar_height = generator.decompose()
 
     # convert the heights into video (note: no audio here yet, and temporarily this saves a file called '_<name>.mp4' which is deleted
-    renderer = processor.VideoCreator(video_width, video_height, framerate, bar_count, name)
+    renderer = processor.VideoCreator(video_width, video_height, framerate, bar_count, path)
     renderer.create_video(video_bar_height, border_width, border_color_RGB, empty_space, background_color_RGB, bar_color_RGB)
     
     # remove the file if it exists already
-    if os.path.exists('./' + name + '.mp4'):
-        os.remove('./' + name + '.mp4')
+    if os.path.exists(path + '.mp4'):
+        os.remove(path + '.mp4')
     
     # merge the video and audio by parsing the individual streams and outputting them together into one file
-    video_input = ffmpeg.input('./_' + name + '.mp4').video
+    video_input = ffmpeg.input(path + '_.mp4').video
     audio_input = ffmpeg.input(argv[1]).audio
-    ffmpeg.output(audio_input, video_input, os.getcwd() + '/' + name + '.mp4').run()
+    ffmpeg.output(audio_input, video_input, path + '.mp4').run()
 
     # remove the temporary file
-    os.remove('./_' + name + '.mp4')
+    os.remove(path + '_.mp4')

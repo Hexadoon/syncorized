@@ -6,12 +6,12 @@ from tqdm import tqdm
 
 class VideoCreator:
     
-    def __init__(self, width, height, fps, bars, name):
+    def __init__(self, width, height, fps, bars, path):
         self.video_width = width 
         self.video_height = height
         self.framerate = fps
         self.blocks = bars
-        self.title = './_' + name + '.mp4'
+        self.title = path + '_.mp4'
     
     
     def process_frame(self, frame_data, border_width, border_BGR, empty_space, \
