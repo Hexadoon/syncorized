@@ -22,20 +22,20 @@ class VideoCreator:
         curr_frame = np.full((self.video_height, self.video_width, 3), background_BGR, dtype=np.uint8)
 
         for x, bar_height in enumerate(frame_data): 
-            # the border is formed by drawing a rectangle of border_color under a rectangle of bar_color
+            # calculates the corners of the current bar
             corner_DL = (int(bar_width*(x + border_width + empty_space/2)) + end_spacing, \
                          int(self.video_height//2 + scale*bar_height))
-
            
             corner_UR = (int(bar_width*(x + 1 - empty_space/2 - border_width)) + end_spacing, \
                          int(self.video_height//2 - scale*bar_height))
 
-
+            # cacluates the pixel width of the border
             border_size = int(border_width*bar_width) 
             
-            
+            # cleans the input colors (everything *must* be an integer)
             border_BGR = (int(border_BGR[0]), int(border_BGR[1]), int(border_BGR[2]))
             bar_BGR = (int(bar_BGR[0]), int(bar_BGR[1]), int(bar_BGR[2]))
+            
             cv2.rectangle(curr_frame, corner_DL, corner_UR, border_BGR, 2*border_size)
             cv2.rectangle(curr_frame, corner_DL, corner_UR, bar_BGR, -1)
         
