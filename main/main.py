@@ -7,16 +7,18 @@ os.system('clear')
 
 root = Tk()
 root.title("Syncorized")
-#root.geometry("1024x480")
+root.geometry("1024x480")
 
-image1 = Image.open("../images/moroccan-flower.png")
-background_image = ImageTk.PhotoImage(image1)
-w = background_image.width()
-h = background_image.height()
-root.geometry("%dx%d+50+30" % (w, h))
+# image1 = Image.open("../images/moroccan-flower.png")
+# background_image = ImageTk.PhotoImage(image1)
+# w = background_image.width()
+# h = background_image.height()
+# root.geometry("%dx%d+50+30" % (w, h))
+# background_label = Label(root, image=background_image)
+# background_label.place(x=0, y=0, relwidth=1, relheight=1)
 
-background_label = Label(root, image=background_image)
-background_label.place(x=0, y=0, relwidth=1, relheight=1)
+frame1 = LabelFrame(root, text="Options1")
+frame1.pack()
 
 def hello():
     hello_label = Label(root, text = "Hello " + myTextbox.get())
