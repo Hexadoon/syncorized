@@ -132,6 +132,9 @@ if preview_mode is True:
 # the actual video generation comes in two parts, the first is computing the heights of the bars, the second is 
 # turning the bar heights into a video
 else:
+    if not os.path.exists('chunks'):
+        os.mkdir('chunks')
+
     # calculate the heights of the bars
     generator = barheight.VideoProcessor(video_width, video_height, framerate, bar_count, wavfile)
     video_bar_height = generator.decompose()
@@ -144,10 +147,22 @@ else:
     if os.path.exists(path + '.mp4'):
         os.remove(path + '.mp4')
     
+    # merges all the chunks into one file (chunkorder is a list of the names of chunks)
+    ffmpeg.input('chunkorder.txt', format='concat', safe=0).output(path + '_.mp4', c='copy').overwrite_output().run()
+    
     # merge the video and audio by parsing the individual streams and outputting them together into one file
     video_input = ffmpeg.input(path + '_.mp4').video
     audio_input = ffmpeg.input(argv[1]).audio
-    ffmpeg.output(audio_input, video_input, path + '.mp4').run()
-
+    ffmpeg.output(audio_input, video_input, path + '.mp4').overwrite_output().run()
+        
+            
     # remove the temporary file
-    os.remove(path + '_.mp4')
+    if os.path.exists(path + '_.mp4'):
+        os.remove(path + '_.mp4')
+    
+    remover = open('chunkorder.txt', 'r')
+    # I'm just flexing here, this removes all the files listed in chunkorder
+    [os.remove(chunk[6:-2]) if os.path.exists(chunk[6:-2]) else 0 for chunk in remover.readlines()]
+    os.remove('chunkorder.txt')
+    os.rmdir('chunks')
+    remover.close()
