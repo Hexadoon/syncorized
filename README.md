@@ -4,3 +4,10 @@ A computer application that transforms audio into a visual depiction of the freq
 | Sujay Sayini   | Sammy Katzman    | Lylianna Barnette      |
 |:--------:| :-------: | :------------: |
 | Developer| Developer | Project Manager|
+## Download Instructions
+1) Download [ffmpeg](https://ffmpeg.org/download.html)
+2) In Terminal:
+   * ``pip install -r requirements.txt``
+   * ``cd Main``
+   * ``javac Main.java``
+   * ``java Main``
