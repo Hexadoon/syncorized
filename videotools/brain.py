@@ -13,7 +13,8 @@ help_message = "Usage: python3 brain.py <audio file> [ -r|f|b|BC|BG|E|BO|BOC|p|h
                "\t-f (framerate)\t\t\tnext arg must be a positive int (default: 24)\n" + \
                "\t-b (bar count)\t\t\tnext arg must be a positive int (default: 100)\n" + \
                "\t-BC (RGB bar color)\t\tnext three args must be ints from 0-255 (inc, inc) (default: (0, 0, 255))\n" + \
-               "\t-BG (RBG background color)\tnext three args must be ints from 0-255 (inc, inc) (default: (0, 0, 0))\n" + \
+               "\t-BG (RGB background color)\tnext three args must be ints from 0-255 (inc, inc) (default: (0, 0, 0))\n" + \
+               "\t\t\t\t\tOR the path of an image to be used as the background\n" + \
                "\t-BO (border width)\t\tnext arg must be a float from 0-1 (default: .1)\n" + \
                "\t-BOC (border color)\t\tnext three args must be ints from 0-255 (inc, inc) (default: (255, 255, 255))\n" + \
                "\t-p (preview mode)\t\tinstead of reading a wav file, running the program will produce a single image with the given specs\n" + \
@@ -27,13 +28,14 @@ if '-h' in argv:
 video_width, video_height = 1920, 1080
 framerate = 24
 bar_count = 100
-bar_color_RGB = (0, 0, 255)
-background_color_RGB = (0, 0, 0)
+bar_color = (255, 0, 0)
+background = (0, 0, 0)
 empty_space = .15 # not changeable, didn't think it'd make sense to be able to 
 border_width = .1
-border_color_RGB = (255, 255, 255)
+border_color = (255, 255, 255)
 wavfile = None
 preview_mode = False
+bg_is_image = False
 
 # path represents the whole filepath, including the name of the file
 path = ''
@@ -81,19 +83,26 @@ while i < len(argv):
             i += 2
             continue
         elif argv[i] == '-BC':
-            bar_color_RGB = (int(argv[i+1]), int(argv[i+2]), int(argv[i+3]))
+            bar_color = (int(argv[i+3]), int(argv[i+2]), int(argv[i+1]))
             i += 4
             continue
         elif argv[i] == '-BG':
-            background_color_RGB = (int(argv[i+1]), int(argv[i+2]), int(argv[i+3]))
-            i += 4
+            if i+2 >= len(argv) or '-' in argv[i+2]:
+                background = argv[i+1]
+                bg_is_image = True
+                i += 2
+            else:
+                background = (int(argv[i+3]), int(argv[i+2]), int(argv[i+1]))
+                bg_is_image = False
+                i += 4
+
             continue
         elif argv[i] == '-BO':
             border_width = float(argv[i+1])
             i += 2
             continue
         elif argv[i] == '-BOC':
-            border_color_RGB = (int(argv[i+1]), int(argv[i+2]), int(argv[i+3]))
+            border_color = (int(argv[i+3]), int(argv[i+2]), int(argv[i+1]))
             i += 4
         elif argv[i] == '-p':
             preview_mode = True
@@ -112,6 +121,9 @@ except:
     stderr.write('Error opening audio file\n')
     exit(1)
 
+renderer = processor.VideoCreator(video_width, video_height, framerate, path, bar_count, border_width, empty_space, \
+                                  bar_color, border_color, background, bg_is_image)
+
 # if -p is called, instead of calling the whole video, it only calls renderer.process_frame and saves that image
 if preview_mode is True:
     random.seed(225511) # seeded for consistency 
@@ -123,9 +135,9 @@ if preview_mode is True:
     
     # this is pretty ugly ngl but it creates the preview frame
     renderer = processor.VideoCreator(video_width, video_height, framerate, bar_count, 'preview')
-    preview_frame = renderer.process_frame(preview_bars, border_width, border_color_RGB[::-1], \
-                    empty_space, background_color_RGB[::-1], bar_color_RGB[::-1], video_width//bar_count, \
-                    (video_width % bar_count)//2, video_height/max(preview_bars))
+    preview_frame = renderer.process_frame(preview_bars, border_width, border_color, \
+                    empty_space, background, bar_color, video_width//bar_count, \
+                    (video_width % bar_count)//2, video_height/max(preview_bars), bg_is_image)
 
     cv2.imwrite("preview.png", preview_frame)
 
@@ -140,8 +152,7 @@ else:
     video_bar_height = generator.decompose()
 
     # convert the heights into video (note: no audio here yet, and temporarily this saves a file called '_<name>.mp4' which is deleted
-    renderer = processor.VideoCreator(video_width, video_height, framerate, bar_count, path)
-    renderer.create_video(video_bar_height, border_width, border_color_RGB, empty_space, background_color_RGB, bar_color_RGB)
+    renderer.create_video(video_bar_height)
     
     # remove the file if it exists already
     if os.path.exists(path + '.mp4'):
