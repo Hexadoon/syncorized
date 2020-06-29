@@ -14,7 +14,7 @@ help_message = "Usage: python3 brain.py <audio file> [ -r|f|b|BC|BG|E|BO|BOC|p|h
                "\t-b (bar count)\t\t\tnext arg must be a positive int (default: 100)\n" + \
                "\t-BC (RGB bar color)\t\tnext three args must be ints from 0-255 (inc, inc) (default: (0, 0, 255))\n" + \
                "\t-BG (RGB background color)\tnext three args must be ints from 0-255 (inc, inc) (default: (0, 0, 0))\n" + \
-               "\t\t\t\t\tOR the path of an image to be used as the background\n" + \
+               "\t\t\t\t\tOR the path of an image to be used as the background and the type of fit\n" + \
                "\t-BO (border width)\t\tnext arg must be a float from 0-1 (default: .1)\n" + \
                "\t-BOC (border color)\t\tnext three args must be ints from 0-255 (inc, inc) (default: (255, 255, 255))\n" + \
                "\t-p (preview mode)\t\tinstead of reading a wav file, running the program will produce a single image with the given specs\n" + \
@@ -33,6 +33,7 @@ background = (0, 0, 0)
 empty_space = .15 # not changeable, didn't think it'd make sense to be able to 
 border_width = .1
 border_color = (255, 255, 255)
+fill_type = 0
 wavfile = None
 preview_mode = False
 bg_is_image = False
@@ -87,10 +88,11 @@ while i < len(argv):
             i += 4
             continue
         elif argv[i] == '-BG':
-            if i+2 >= len(argv) or '-' in argv[i+2]:
+            if i+3 >= len(argv) or '-' in argv[i+3]:
                 background = argv[i+1]
+                fill_type = int(argv[i+2])
                 bg_is_image = True
-                i += 2
+                i += 3
             else:
                 background = (int(argv[i+3]), int(argv[i+2]), int(argv[i+1]))
                 bg_is_image = False
@@ -122,7 +124,7 @@ except:
     exit(1)
 
 renderer = processor.VideoCreator(video_width, video_height, framerate, path, bar_count, border_width, empty_space, \
-                                  bar_color, border_color, background, bg_is_image)
+                                  bar_color, border_color, background, bg_is_image, fill_type)
 
 # if -p is called, instead of calling the whole video, it only calls renderer.process_frame and saves that image
 if preview_mode is True:

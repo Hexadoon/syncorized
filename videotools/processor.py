@@ -8,7 +8,7 @@ import threading
 
 class VideoCreator:
 
-    def __init__(self, width, height, fps, path, bars, border_width, empty_space, bar_color, border_color, background, bg_is_image):
+    def __init__(self, width, height, fps, path, bars, border_width, empty_space, bar_color, border_color, background, bg_is_image, fill_type):
         self.video_width = width 
         self.video_height = height
         self.framerate = fps
@@ -24,26 +24,28 @@ class VideoCreator:
 
         self.bgimage = bg_is_image
         if bg_is_image:
-            self.prepare_background(background)
+            self.prepare_background(background, fill_type)
 
         self.bar_width = self.video_width//self.blocks
         self.border_size = int(self.border_width*self.bar_width)
         self.end_spacing = (self.video_width % self.blocks) // 2
 
 
-    def prepare_background(self, background):
+    def prepare_background(self, background, fill_type):
         unprepped = cv2.imread(background)
-        print(unprepped.shape)
         if unprepped.shape[0:2] != (self.video_height, self.video_width):
-            scale_factor = 1/min(unprepped.shape[0]/self.video_height, unprepped.shape[1]/self.video_width)
-            print(scale_factor)
-            unprepped = cv2.resize(unprepped, None, fx=scale_factor, fy=scale_factor)
-            crop_dims = ((unprepped.shape[0] - self.video_height)//2, (unprepped.shape[0] + self.video_height)//2, 
-                         (unprepped.shape[1] - self.video_width) //2, (unprepped.shape[1] + self.video_width) //2)
+            if fill_type == 0:
+                scale_factor = 1/min(unprepped.shape[0]/self.video_height, unprepped.shape[1]/self.video_width)
+                unprepped = cv2.resize(unprepped, None, fx=scale_factor, fy=scale_factor)
+                crop_dims = ((unprepped.shape[0] - self.video_height)//2, (unprepped.shape[0] + self.video_height)//2, 
+                             (unprepped.shape[1] - self.video_width) //2, (unprepped.shape[1] + self.video_width) //2)
 
-            prepped = unprepped[crop_dims[0]:crop_dims[1], crop_dims[2]:crop_dims[3], :]
-        print(prepped.shape) 
-        self.bg_array = prepped
+                self.bg_array = unprepped[crop_dims[0]:crop_dims[1], crop_dims[2]:crop_dims[3], :]
+        
+            else:
+                vscale = self.video_height/unprepped.shape[0]
+                hscale = self.video_width/unprepped.shape[1]
+                self.bg_array = cv2.resize(unprepped, None, fx=hscale, fy=vscale)
 
 
     def process_frame(self, frame_data, scale):
