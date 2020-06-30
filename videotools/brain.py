@@ -38,6 +38,7 @@ fill_type = 0
 wavfile = None
 preview_mode = False
 bg_is_image = False
+clean_wav = False
 
 # path represents the whole filepath, including the name of the file
 path = ''
@@ -58,6 +59,7 @@ while i < len(argv):
 
             ffmpeg.output(ffmpeg.input(argv[1]).audio, filename=argv[1][:-3]+'wav', f='wav').run()
             argv[1] = argv[1][:-3]+'wav'
+            clean_wav = True
         if ('-p' not in argv):
             wavfile = argv[i]
 
@@ -178,4 +180,6 @@ else:
     [os.remove(chunk[6:-2]) if os.path.exists(chunk[6:-2]) else 0 for chunk in remover.readlines()]
     os.remove('chunkorder.txt')
     os.rmdir('chunks')
+    if clean_wav:
+        os.remove(path + '.wav')
     remover.close()

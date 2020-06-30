@@ -24,40 +24,44 @@ class VideoCreator:
         self.background = background
 
         self.bgimage = bg_is_image
-        if bg_is_image:
-            self.prepare_background(background, fill_type)
+        self.prepare_background(background, fill_type)
 
         self.bar_width = self.video_width//self.blocks
         self.border_size = int(self.border_width*self.bar_width)
         self.end_spacing = (self.video_width % self.blocks) // 2
 
-
     def prepare_background(self, background, fill_type):
         ''' if the background is an image, instead of loading each frame, it sets up 
             a template and has the code copy it, which is much faster '''
-
-        unprepped = cv2.imread(background)
-        if unprepped.shape[0:2] != (self.video_height, self.video_width):
-            # if you chose to fill to screen, maintaining aspect ratio and cropping the image
-            if fill_type == 0:
-                # scale factor is the same for x and y, chosen to be the larger of the two
-                scale_factor = max(self.video_height/unprepped.shape[0], self.video_width,unprepped.shape[1])
-                #scale_factor = 1/min(unprepped.shape[0]/self.video_height, unprepped.shape[1]/self.video_width)
-
-                # scales the image, then crops it so that the center of the image is in the background
-                unprepped = cv2.resize(unprepped, None, fx=scale_factor, fy=scale_factor)
-                crop_dims = ((unprepped.shape[0] - self.video_height)//2, (unprepped.shape[0] + self.video_height)//2, 
-                             (unprepped.shape[1] - self.video_width) //2, (unprepped.shape[1] + self.video_width) //2)
-
-                self.bg_array = unprepped[crop_dims[0]:crop_dims[1], crop_dims[2]:crop_dims[3], :]
         
-            # if you chose to stretch to fit the screen, not maintaining aspect ratio but keeping the whole image
+        if self.bgimage:
+            unprepped = cv2.imread(background)
+            if unprepped.shape[0:2] != (self.video_height, self.video_width):
+                # if you chose to fill to screen, maintaining aspect ratio and cropping the image
+                if fill_type == 0:
+                    # scale factor is the same for x and y, chosen to be the larger of the two
+                    scale_factor = max(self.video_height/unprepped.shape[0], self.video_width,unprepped.shape[1])
+                    #scale_factor = 1/min(unprepped.shape[0]/self.video_height, unprepped.shape[1]/self.video_width)
+
+                    # scales the image, then crops it so that the center of the image is in the background
+                    unprepped = cv2.resize(unprepped, None, fx=scale_factor, fy=scale_factor)
+                    crop_dims = ((unprepped.shape[0] - self.video_height)//2, (unprepped.shape[0] + self.video_height)//2, 
+                                 (unprepped.shape[1] - self.video_width) //2, (unprepped.shape[1] + self.video_width) //2)
+
+                    self.bg_array = unprepped[crop_dims[0]:crop_dims[1], crop_dims[2]:crop_dims[3], :]
+            
+                # if you chose to stretch to fit the screen, not maintaining aspect ratio but keeping the whole image
+                else:
+                    vscale = self.video_height/unprepped.shape[0]
+                    hscale = self.video_width/unprepped.shape[1]
+                    self.bg_array = cv2.resize(unprepped, None, fx=hscale, fy=vscale)
             else:
-                vscale = self.video_height/unprepped.shape[0]
-                hscale = self.video_width/unprepped.shape[1]
-                self.bg_array = cv2.resize(unprepped, None, fx=hscale, fy=vscale)
+                self.bg_array = unprepped
         else:
-            self.bg_array = unprepped
+            self.bg_array = np.full((self.video_height, self.video_width, 3), self.background, dtype=np.uint8)
+
+        if self.bar_layout != 0:
+            self.bg_array = cv2.circle(self.bg_array, (self.video_width//2, self.video_height//2), self.video_height//4, self.bar_color, -1)
 
     def transform_rect(self, rect, angle):
         ''' takes a list of points, rotates them by angle clockwise and move them to the center '''
@@ -65,15 +69,12 @@ class VideoCreator:
         for pt in rect:
             pt[0], pt[1] = pt[0]*c - pt[1]*s + self.video_width//2, pt[0]*s + pt[1]*c + self.video_height//2
 
+
     def process_frame(self, frame_data, scale):
         ''' turns the data for a frame into a np array representing the frame '''
         
-        # instantiate the frame as an ndarray with shape (h w, 3), the last channel being the background color
-        # or if the background is an image, set it as the image (scaled to fit the screen)
-        if self.bgimage:
-            curr_frame = np.copy(self.bg_array)
-        else:
-            curr_frame = np.full((self.video_height, self.video_width, 3), self.background, dtype=np.uint8)
+        # the background is a copy of the background array we prepared
+        curr_frame = np.copy(self.bg_array)
 
         for x, bar_height in enumerate(frame_data): 
             if self.bar_layout == 0:
