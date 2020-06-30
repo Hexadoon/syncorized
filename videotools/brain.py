@@ -1,14 +1,13 @@
 from sys import argv,exit,stderr
 import barheight
 import processor
-import subprocess
 import cv2
 from scipy.io import wavfile as wavf
 import random
 import os 
 import ffmpeg 
 
-help_message = "Usage: python3 brain.py <audio file> [ -r|f|b|BC|BG|E|BO|BOC|p|h ]\n" + \
+help_message = "Usage: python3 brain.py <audio file> [ -r|f|b|l|BC|BG|BO|BOC|p|h ]\n" + \
                "\t-r (resolution)\t\t\tnext two args must be positive ints, width then height (default: 1920 x 1080)\n" + \
                "\t-f (framerate)\t\t\tnext arg must be a positive int (default: 24)\n" + \
                "\t-b (bar count)\t\t\tnext arg must be a positive int (default: 100)\n" + \
@@ -17,6 +16,7 @@ help_message = "Usage: python3 brain.py <audio file> [ -r|f|b|BC|BG|E|BO|BOC|p|h
                "\t\t\t\t\tOR the path of an image to be used as the background and the type of fit\n" + \
                "\t-BO (border width)\t\tnext arg must be a float from 0-1 (default: .1)\n" + \
                "\t-BOC (border color)\t\tnext three args must be ints from 0-255 (inc, inc) (default: (255, 255, 255))\n" + \
+               "\t-l (layout)\t\t\tnext arg is the layout number, 0 is line, 1 is circle (default: 0)\n" + \
                "\t-p (preview mode)\t\tinstead of reading a wav file, running the program will produce a single image with the given specs\n" + \
                "\t-h (help mode)\t\t\tprints this message and terminates"
 
@@ -28,6 +28,7 @@ if '-h' in argv:
 video_width, video_height = 1920, 1080
 framerate = 24
 bar_count = 100
+bar_layout = 0
 bar_color = (255, 0, 0)
 background = (0, 0, 0)
 empty_space = .15 # not changeable, didn't think it'd make sense to be able to 
@@ -97,7 +98,6 @@ while i < len(argv):
                 background = (int(argv[i+3]), int(argv[i+2]), int(argv[i+1]))
                 bg_is_image = False
                 i += 4
-
             continue
         elif argv[i] == '-BO':
             border_width = float(argv[i+1])
@@ -106,9 +106,14 @@ while i < len(argv):
         elif argv[i] == '-BOC':
             border_color = (int(argv[i+3]), int(argv[i+2]), int(argv[i+1]))
             i += 4
+        elif argv[i] == '-l':
+            bar_layout = int(argv[i+1])
+            i += 2
+            continue
         elif argv[i] == '-p':
             preview_mode = True
             i += 1
+            continue
         else:
             raise ValueError
     except:
@@ -116,15 +121,14 @@ while i < len(argv):
         exit(1)
 
 try:
-    print(wavfile)
     if wavfile is not None:
         wavfile = wavf.read(wavfile)
 except:
     stderr.write('Error opening audio file\n')
     exit(1)
 
-renderer = processor.VideoCreator(video_width, video_height, framerate, path, bar_count, border_width, empty_space, \
-                                  bar_color, border_color, background, bg_is_image, fill_type)
+renderer = processor.VideoCreator(video_width, video_height, framerate, path, bar_count, bar_layout, border_width, \
+                                  empty_space, bar_color, border_color, background, bg_is_image, fill_type)
 
 # if -p is called, instead of calling the whole video, it only calls renderer.process_frame and saves that image
 if preview_mode is True:
@@ -135,11 +139,7 @@ if preview_mode is True:
     for i in range(bar_count):
         preview_bars.append(random.random()/(i+1))
     
-    # this is pretty ugly ngl but it creates the preview frame
-    renderer = processor.VideoCreator(video_width, video_height, framerate, bar_count, 'preview')
-    preview_frame = renderer.process_frame(preview_bars, border_width, border_color, \
-                    empty_space, background, bar_color, video_width//bar_count, \
-                    (video_width % bar_count)//2, video_height/max(preview_bars), bg_is_image)
+    preview_frame = renderer.process_frame(preview_bars, video_height/max(preview_bars) * (.5 if bar_layout != 0 else 1))
 
     cv2.imwrite("preview.png", preview_frame)
 
