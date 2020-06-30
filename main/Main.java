@@ -394,7 +394,6 @@ public class Main extends Application{
             //     System.out.println(color_of_bars.getValue());
             //     System.out.println(color_of_border.getValue());
             // }
-            System.out.println(message);
             if(error != ""){
                 ErrorBox.display("Error has occured.", error);
             } else {
