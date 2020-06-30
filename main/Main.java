@@ -1,16 +1,21 @@
+
 import javafx.application.Application;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import java.awt.Color;
+
+//import javafx.beans.value.ChangeListener;
+//import javafx.beans.value.ObservableValue;
+//import java.awt.Color;
 import java.awt.Desktop;
 import java.io.IOException;
-import javax.swing.text.StyledEditorKit.UnderlineAction;
+import javafx.embed.swing.SwingNode;
+//import javax.swing.text.StyledEditorKit.UnderlineAction;
 import javax.swing.JProgressBar;
-import javafx.event.*;
+//import javafx.event.*;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
+//import javafx.geometry.Pos;
 import javafx.scene.*;
+import javafx.scene.image.Image;
+import javafx.scene.paint.Color;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
@@ -18,13 +23,11 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Slider;
 import javafx.scene.control.ColorPicker;
-import javafx.scene.control.ProgressBar;
-import javafx.scene.control.ProgressIndicator;
-import javafx.scene.layout.BorderPane;
+//import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
+//import javafx.scene.layout.HBox;
+//import javafx.scene.layout.StackPane;
+//import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import java.io.File;
@@ -42,7 +45,7 @@ public class Main extends Application{
     @Override
     public void start(Stage primaryStage) throws Exception {
         window = primaryStage;
-       
+        window.setResizable(false);
         window.setTitle("Syncorized");
 
         window.setOnCloseRequest(e -> {
@@ -205,8 +208,8 @@ public class Main extends Application{
         GridPane.setConstraints(bar_label, 2, 4);
 
         ChoiceBox<String> bar_types = new ChoiceBox<String>();
-        bar_types.getItems().addAll("Fill" , "Clear");
-        bar_types.setValue("Fill");
+        bar_types.getItems().addAll("1. Normal" , "2. Curved");
+        bar_types.setValue("1. Normal");
         
         GridPane.setConstraints(bar_types, 3, 4);
 
@@ -214,16 +217,16 @@ public class Main extends Application{
         GridPane.setConstraints(layout_label, 2, 5);
 
         ChoiceBox<String> layout_types = new ChoiceBox<String>();
-        layout_types.getItems().addAll("Normal", "Circular");
-        layout_types.setValue("Normal");
+        layout_types.getItems().addAll("1. Normal", "2. Circular");
+        layout_types.setValue("1. Normal");
         GridPane.setConstraints(layout_types, 3, 5);
 
         Label width_of_border_label = new Label("Width of border");
         GridPane.setConstraints(width_of_border_label, 2, 6, 2, 1);
         GridPane.setHalignment(width_of_border_label, HPos.CENTER);
 
-        Slider width_of_border_slider = new Slider(0,100,40);
-        width_of_border_slider.setValue(40);
+        Slider width_of_border_slider = new Slider(0,100,10);
+        width_of_border_slider.setValue(10);
         width_of_border_slider.setShowTickLabels(true);
         width_of_border_slider.setShowTickMarks(true);
         width_of_border_slider.setMajorTickUnit(50);
@@ -235,14 +238,16 @@ public class Main extends Application{
         GridPane.setConstraints(border_value, 3, 6);
         GridPane.setHalignment(border_value, HPos.RIGHT);
 
-        ProgressBar pb = new ProgressBar(0);
-        pb.setMinWidth(490);
-        pb.setMinHeight(25);
-        pb.setProgress(.5);
-        GridPane.setConstraints(pb, 0, 10, 4, 3);
-
-        ProgressIndicator progressIndicator = new ProgressIndicator();
+        SwingNode swingNode = new SwingNode();
         JProgressBar progressBar = new JProgressBar(0, 100);
+        //progressBar.setSize(500, 100);
+        // progressBar.addChangeListener(l -> {
+        //     progressBar.setValue();
+        // });
+        progressBar.setStringPainted(true);
+        swingNode.setContent(progressBar);
+
+        GridPane.setConstraints(swingNode, 0, 10, 4, 4);
         
         width_of_border_slider.valueProperty().addListener(e-> {
             border_value.setText(Integer.toString((int)width_of_border_slider.getValue()));
@@ -265,46 +270,151 @@ public class Main extends Application{
 
         previewButton.setOnAction(e -> {
             //still need to finish
-            preview.display("Preview of your image", "Thats cool");
+            PreviewBox.display("Preview of your image", "Thats cool");
         });
 
         render_button.setOnAction(e -> {
-            String[] error;
-            System.out.println(width_height_input.getText());
-            width_height_input.clear();
-            
-            System.out.println(frame_rate_input.getText());
-            frame_rate_input.clear();
+            String error = "";
+            String message = "python3 ../videotools/brain.py ";
 
+            if(song_address != ""){
+                if(song_address.substring(song_address.length()-4).equals(".mp3")){
+                    message += song_address + " ";
+                }else {
+                    //wrong input
+                    error += "Incorrect Input for song address. Please input a \".mp3\" file. ";
+                }
+            }else{
+                //no input
+                error += "No song address given. ";
+            }
+
+            if(frame_rate_input.getText() != null && !frame_rate_input.getText().isEmpty()){
+                try {
+                    if(Integer.parseInt(frame_rate_input.getText()) < 100 && Integer.parseInt(frame_rate_input.getText()) > 0){
+                        message += "-f " + frame_rate_input.getText() + " ";
+                        frame_rate_input.clear();
+                    }else {
+                        //either too big or too small
+                        error += "Invalid value for frame rate. Enter a number between 0 and 100. ";
+                    }
+                } catch (Exception ex) {
+                    // incorrect input
+                    error += "Incorrect input frame rate. Enter a number between 0 and 100. ";
+                }
+            }else{
+                // set to default 
+                //message += "-f 24 ";
+            }
+
+            if(width_height_input.getText() != null && !width_height_input.getText().isEmpty()){
+                if(width_height_input.getText().indexOf('x') == -1){
+                    //x doesnt exist, wrong format
+                    error += "Incorrect format for width and height. Please enter your values in the proper format. Ex. 1920x1080 ";
+                }else{
+                    String width_height = width_height_input.getText().replaceAll("\\s","");
+                    String width = width_height.substring(0, width_height.indexOf('x'));
+                    String height = width_height.substring(width_height.indexOf('x')+1, width_height.length());
+                    try {
+                        int w = Integer.parseInt(width);
+                        int h = Integer.parseInt(height);
+                        message += "-r " + width + " " + height + " ";
+                        width_height_input.clear();
+                    } catch (Exception ex) {
+                        //not integers 
+                        error += "Incorrect input for width and height. Please enter your values in the proper format. Ex. 1920x1080 ";
+                    }
+                }
+            }else{
+                //no input, set to default
+                //message += "-r 1920 1080 ";
+            }
+            // Not done
             System.out.println(bar_types.getValue());
-
+            // Not done 
             System.out.println(layout_types.getValue());
 
-            System.out.println(width_of_border_slider.getValue());
+            int width_border = ((int)width_of_border_slider.getValue());
+            double convert_width_border = ((double)width_border)/100 ;
+            message += "-BO " +convert_width_border + " ";
+
+            if(num_of_bars_input.getText() != null && !num_of_bars_input.getText().isEmpty()){
+                try {
+                    String num_bars = num_of_bars_input.getText().replaceAll("\\s","");
+                    int bars = Integer.parseInt(num_bars);
+                    message += "-b " + num_bars + " ";
+                    num_of_bars_input.clear();
+                } catch (Exception ex) {
+                    error += "Incorrect input for number of bars. Please enter one number. Ex. 100";
+                }
+            }else{
+                //no input, set default 
+                //message += "-b 100 ";
+            }
 
             if(select_color_label.isSelected()){
-                System.out.println(colorPicker1.getValue());
+                //color for background
+                int red = Integer.parseInt(colorPicker1.getValue().toString().substring(2,4), 16);
+                int blue = Integer.parseInt(colorPicker1.getValue().toString().substring(4,6), 16);
+                int green = Integer.parseInt(colorPicker1.getValue().toString().substring(6,8), 16);
+                message += "-BG " +red + " " + blue + " " + green + " ";
+
+            }else if(insert_image_label.isSelected()){ // not finished 
+                if(image_address != ""){
+                    if(image_address.substring(image_address.length()-4).equals(".png") || image_address.substring(image_address.length()-4).equals(".jpg")){
+                        //fix the one here 
+                        message += "-BG "+ image_address + "1 ";
+                    }else {
+                        //wrong input
+                        error += "Incorrect Input for image Address. Please input a \".png\" or \".jpg\" file. ";
+                    }
+                }else{
+                    //no input
+                    error += "No image address given. ";
+                }
+            }else {
+                //select color or image_address are not selected
+                error += "Please select a color or an image.";
             }
-            System.out.println(color_of_bars.getValue());
-            System.out.println(color_of_border.getValue());
 
-            System.out.println(image_address);
-            System.out.println(song_address);
-            // if(insert_image_label.isSelected()){
-            //     System.out.println(image_file);
+            //color of bars 
+            int bar_red = Integer.parseInt(color_of_bars.getValue().toString().substring(2,4), 16);
+            int bar_blue = Integer.parseInt(color_of_bars.getValue().toString().substring(4,6), 16);
+            int bar_green = Integer.parseInt(color_of_bars.getValue().toString().substring(6,8), 16);
+            message += "-BC " +bar_red + " " + bar_blue + " " + bar_green + " ";
+
+            //color of border 
+            int border_red = Integer.parseInt(color_of_border.getValue().toString().substring(2,4), 16);
+            int border_blue = Integer.parseInt(color_of_border.getValue().toString().substring(4,6), 16);
+            int border_green = Integer.parseInt(color_of_border.getValue().toString().substring(6,8), 16);
+            message += "-BOC " +border_red + " " + border_blue + " " + border_green + " ";
+
+            // if(color_of_bars.getValue().toString().equals("0xffffffff") && color_of_border.getValue() == Color.WHITE){
+            // }else{
+            //     System.out.println(color_of_bars.getValue());
+            //     System.out.println(color_of_border.getValue());
             // }
-            
-
-            //still need to finish
-            //Process p = Runtime.getRuntime().exec("python yourapp.py");
+            System.out.println(message);
+            if(error != ""){
+                ErrorBox.display("Error has occured.", error);
+            } else {
+                System.out.println(message);
+                //Process p = Runtime.getRuntime().exec(message);
+                //File f = new File("");
+                // if (f != null) {
+                //     openFile(f);
+                // }
+            }
         });
         
         grid.getChildren().addAll(title_name, author, input_label, openButton, previewButton, render_button, frame_rate_label, frame_rate_input, width_and_height);
         grid.getChildren().addAll(width_height_input, background_label, layout_types, bar_types, layout_label, bar_label, main_bar_label);
         grid.getChildren().addAll(width_of_border_label, width_of_border_slider, num_of_bars_label, num_of_bars_input, insert_image_label, select_color_label);
-        grid.getChildren().addAll(color_of_bars_label, color_of_bars, color_of_border_label, color_of_border, border_value, pb);
-        scene1 = new Scene(grid, 510,360);
+        grid.getChildren().addAll(color_of_bars_label, color_of_bars, color_of_border_label, color_of_border, border_value, swingNode);
+        scene1 = new Scene(grid, 510,390);
         window.setScene(scene1);
+        window.getIcons().add(new Image(getClass().getResourceAsStream("Syncorized Logo.png")));
+        //primaryStage.titleProperty().bind(scene1.widthProperty().asString().concat(" : ").concat(scene1.heightProperty().asString()));
         window.show();
     }
     private void closeProgram(){
@@ -318,5 +428,11 @@ public class Main extends Application{
     }
     public void return_song_address(String name){
         song_address = name;
+    }
+    private void openFile(File file) {
+        try {
+            desktop.open(file);
+        } catch (IOException ex) {
+        }
     }
 }

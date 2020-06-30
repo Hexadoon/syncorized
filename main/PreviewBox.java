@@ -1,11 +1,12 @@
 
+
 import javafx.scene.*;
 import javafx.stage.*;
 import javafx.scene.layout.*;
 import javafx.scene.control.*;
 import javafx.geometry.*;
 
-public class preview {
+public class PreviewBox {
 
     public static void display(String title, String message){
         Stage window = new Stage();
@@ -17,6 +18,8 @@ public class preview {
 
         Label label = new Label();
         label.setText(message);
+
+        //Image image = new Image();
 
         Button closeButton = new Button("Close");
         closeButton.setOnAction(e -> window.close());
